@@ -848,6 +848,12 @@ deps_/home/wangzihao/Linux-Driver/my_test_module/my_test_module.o := \
   include/linux/projid.h \
   include/uapi/linux/quota.h \
   include/linux/nfs_fs_i.h \
+  include/linux/uaccess.h \
+  arch/x86/include/asm/uaccess.h \
+    $(wildcard include/config/x86/intel/usercopy.h) \
+  arch/x86/include/asm/smap.h \
+  arch/x86/include/asm/extable.h \
+  arch/x86/include/asm/uaccess_64.h \
 
 /home/wangzihao/Linux-Driver/my_test_module/my_test_module.o: $(deps_/home/wangzihao/Linux-Driver/my_test_module/my_test_module.o)
 

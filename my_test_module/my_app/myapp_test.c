@@ -11,17 +11,20 @@ int main(int argc,char const* argv[])
 		perror("open err");
 		return -1;
 	}
-	int val=10;
-	int nbytes=write(fd,&val,sizeof(int));
+	char buf[128]={0};
+	fgets(buf,sizeof buf,stdin);
+	int nbytes=write(fd,buf,strlen(buf));
 	if(nbytes==-1){
 		perror("write err:\n");
 		return -1;
 	}
-	nbytes=read(fd,&val,sizeof(int));
+	memset(buf,0,sizeof buf);
+	nbytes=read(fd,buf,sizeof(buf)-1);
 	if(nbytes==-1){
 		perror("read err:\n");
 		return -1;
 	}
+	printf("接收到的数据%s\n",buf);
 	close(fd);
 	return 0;
 }

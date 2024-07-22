@@ -1,6 +1,7 @@
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/fs.h>
+#include <linux/uaccess.h>
 //描述一个字符设备：应该有哪些属性：
 //1.设备名称，2.设备号：主设备好，次设备号，3.对设备进行操作的结构体struct file_operations
 #define MYDEV_NAME "xxx_sample_chardev"
@@ -14,17 +15,56 @@ struct xxx_sample_chardev
 };
 //1.在全局中定义的 xxx_sample_charde的对象
 struct xxx_sample_chardev my_chrdev;
-
+char kernel_buf[128]={0};
 //在内核定义对应的函数接口：
 //与文件read对应的函数指针
 ssize_t xxx_sample_chardev_read (struct file * file, char __user *userbuf, size_t size, loff_t * offset)
 {
+    //回调函数中参数：
+    //参数1：就是用户进程中使用open内核中创建的struct file的实例的地址。
+    //参数2：usrbuf:就是用户进程中数据的地址。
+    //参数3: size,用户进程中要拷贝的字节数。
+    //参数4：从内核空间拷贝时的偏移量。单元也是字节。
+
+    //调用copy_to_user从用户进程中获取数据：
+    int ret = 0;
+    //最后在内核对用户传过来的长度进行过滤。避免操作非法内存。
+    //对内核中的内存使用要十分慎重，很容易造成内核的崩溃。
+    if(size >= sizeof(kernel_buf))
+    {
+        size = sizeof(userbuf);
+    }
+    ret = copy_to_user(userbuf, kernel_buf + *offset, size);
+    if(ret)
+    {
+        printk("copy_to_user failed");
+        return -EIO;
+    }
     printk("内核中的xxx_sample_chardev_read执行了\n");
     return size;
 }
 //与write对应的函数指针
 ssize_t xxx_sample_chardev_write (struct file *file, const char __user *usrbuf, size_t size, loff_t *offset)
 {
+    //回调函数中参数：
+    //参数1：就是用户进程中使用open内核中创建的struct file的实例的地址。
+    //参数2：usrbuf:就是用户进程中数据的地址。
+    //参数3: size,用户进程中要拷贝的字节数。
+    //参数4：文件读写偏移量。单元也是字节。
+
+    //调用copy_from_user从用户进程中获取数据：
+    int ret = 0;
+    if(size >= sizeof(kernel_buf))
+    {
+        size = sizeof(usrbuf);
+    }
+    memset(kernel_buf,0,sizeof(kernel_buf));
+    copy_from_user(kernel_buf + *offset,usrbuf,size);
+    if(ret)
+    {
+        printk("copy_from_usre failed");
+        return -EIO;
+    }
     printk("内核中的xxx_sample_chardev_write执行了\n");
     return size;
 }
